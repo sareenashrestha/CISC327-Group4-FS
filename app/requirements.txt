@@ -1,1 +1,59 @@
 Flask==2.0.1
+Requirement 1: Users shall be able to register for a new account SABIN
+Test Case Name: User Registration
+Objective: To verify that users can successfully register for an account
+Action: In the user registration page, fill in valid user details such as name, email, password” and click register
+Assert: Check that the user is registered and redirected to the login page with a success message
+
+Requirement 2: Users shall be able to search for available flights YASHASVI
+Test Case Name: Flight Search
+Objective: To verify that users can search for flights based on trip type (round trip, one way, etc), the number of passengers origin, destination, and departure date
+Action: User enters valid information about their desired trip type, the number of passengers, and the departure date (and return date if they are doing a round trip).
+Assert: Make sure that an available list of flights that meet the users criteria are listed, and none if there are no flights available.
+
+Requirement 3: Users shall be able to select a flight they want to book SAREENA
+Test Case Name: Select Flight
+Objective: To verify that users can select a flight of their choosing.
+Action: User is presented with a list of available flights matching their search criteria (criteria listed above). The user clicks on a specific flight to select it.
+Assert: Ensure the user is redirected to the next step (choosing available seats).
+
+Requirement 4: Users shall be able to log in and log out of their account SABIN
+Test Case Name: User Login/Logout
+Objective: To verify that a user can log in and log out of their account
+Action: User is presented with a user login page to fill in proper account details, press login, and user can click logout at any time
+Assert: Check that the user details match a registered account and redirect to main page / Redirect user to login page once account has logged out
+
+Requirement 5: Users shall be able to pick an available seat of their selected flight YASHASVI
+Test Case Name: Select Seat
+Objective: To verify a user can select an available seat of their choosing from their selected flight
+Action: User is presented with a selection of available seats and clicks on an available seat to select and book
+Assert: Check that a user can successfully select an available seat and redirect to payment
+
+Requirement 6: Users should be able to successfully pay for their chosen seat SAREENA
+Test Case Name: Payment
+Objective: To verify a user can successfully and securely pay for their seat with their financial account details
+Action: User is presented with payment options, where they select an option and fill in corresponding valid financial details before submitting
+Assert: Check that a successful payment is made when a user submits their financial details
+
+Requirement 7: Users should be able to view ticket / download booking confirmation SABIN
+Test Case Name: Booking confirmation
+Objective: To verify that users can view and download their booking confirmation after a successful payment. 
+Action: Users are able to click the “Download Confirmation” / “Download Ticket” button on the confirmation page. 
+Assert: Check that the file containing the booking details is successfully downloaded. 
+
+8. Requirement 8: Users should be able to cancel their flight booking. SAREENA
+Test Case Name: Cancel booking
+Objective: To verify that users can cancel their flight booking and get a confirmation. 
+Action: Users are able to click “Cancel Booking” from their account page. 
+Assert: Ensure that the system asks for a confirmation of cancellation, and upon confirming, cancels the booking and displays a success message. 
+
+9. Requirement 9: Users should be able to make changes to their booking. SABIN
+Test Case Name: Modify Booking
+Objective: To verify that users can modify their booking, such as changing flight and seat.
+Assert: Check that the system updates the information and displays the changes on the confirmation page. 
+
+10. Requirement 10: Users should be able to filter search results by price, airlines, and flight duration. YASHASVI
+Test Case Name: Filter Search Results
+Objective: To verify that users can filter flight search results based on price, airlines, and flight duration. 
+Action: On the search results page, use the filters to refine the search by selecting an airline, setting a price range, and limiting the duration of flights. 
+Assert: Ensure that the flight results updates correctly, and only displays flights that match the filter criteria. 
