@@ -6,6 +6,34 @@
     <title>Document</title>
 </head>
 <body>
-    <h1> Testing </h1>
+    <div id="header">
+        <img src="{{ url_for('static', filename='assets/logo.png') }}" width="100" alt="Logo">
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div id="login-main">
+        <form method="POST" action="{{ url_for('login') }}">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <br>
+    
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <br>
+    
+            <input type="submit" value="Login">
+        </form>
+
+    </div>
+    
 </body>
 </html>

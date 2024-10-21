@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "asdf"
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -18,15 +19,18 @@ dummy = {
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        # Get form data
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        # Check if username exists and password matches
         if username in dummy and dummy[username] == password:
-            flash("Login successful, welcome {username}")
-            return redirect(url_for('index'))
+            flash('Login successful!', 'success')  # Flash success message
+            return redirect(url_for('index'))  # Redirect to prevent form resubmission
         else:
-            flash("Username or password is incorrect")
-            return redirect(url_for('login'))
-            
+            flash('Login failed. Invalid username or password.', 'danger')  # Flash failure message
+            return redirect(url_for('login'))  # Redirect to prevent form resubmission
+
     return render_template('login.html')
 
 if __name__ == '__main__':
