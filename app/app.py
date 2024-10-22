@@ -12,9 +12,9 @@ def index():
 
 
 dummy = {
-    'user1': 'password1',
-    'user2': 'password2',
-    'user3': 'password3'
+    'user1@gmail.com': 'Password1!',
+    'user2@gmail.com': 'Password2!',
+    'user3@gmail.com': 'Password3!'
 }
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -26,7 +26,7 @@ def login():
         # Check if username exists and password matches
         if username in dummy and dummy[username] == password:
             flash('Login successful!', 'success')  # Flash success message
-            return redirect(url_for('login'))  # Redirect to prevent form resubmission
+            return redirect(url_for('index'))  # Redirect to the main page
         else:
             flash('Login failed. Invalid username or password.', 'danger')  # Flash failure message
             return redirect(url_for('login'))  # Redirect to prevent form resubmission
