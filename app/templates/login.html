@@ -1,5 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; 
+        }
+        .main-page{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            background-image: url(../static/assets/plane.svg);
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat;
+        }
+        .section-content {
+            display: block;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            justify-content: center;
+        }
+        .form-control {
+            width: 100%; 
+            padding: 15px;
+            border-radius: 5px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ccc; 
+        }
+
+        .btn-continue {
+            background-color: #800000;
+            color: white;
+            width: 100%; 
+            padding: 15px; 
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn-continue:hover {
+            background-color: #660000;
+        }
+        .login-main {
+            padding: 30px;
+            border-radius: 30px; 
+            background-color: white;
+            box-shadow: none; 
+            width: 75%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .danger {
+            color: red;
+        }
+
+
+    </style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,28 +75,36 @@
         <img src="{{ url_for('static', filename='assets/logo.png') }}" width="100" alt="Logo">
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
 
-    <div id="login-main">
-        <form method="POST" action="{{ url_for('login') }}">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <br>
+    <div class="main-page">
+        <div class="login-main">
+            <div class="section-content">
+                <div class="rounded-box">
+                    <form id="step1Form" method="POST" action="{{ url_for('login') }}">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Create Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password">
+                        </div>
+                        {% with messages = get_flashed_messages(with_categories=True) %}
+                            {% if messages %}
+                                    {% for category, message in messages %}
+                                        <p class="{{ category }}">{{ message }}</p>
+                                    {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                
+                        <button type="submit" class="btn-continue">Continue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <br>
-    
-            <input type="submit" value="Login">
-        </form>
+    </div>
+
 
     </div>
     
