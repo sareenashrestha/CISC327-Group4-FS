@@ -26,7 +26,7 @@ def login():
         # Check if username exists and password matches
         if username in dummy and dummy[username] == password:
             flash('Login successful!', 'success')  # Flash success message
-            return redirect(url_for('index'))  # Redirect to prevent form resubmission
+            return redirect(url_for('login'))  # Redirect to prevent form resubmission
         else:
             flash('Login failed. Invalid username or password.', 'danger')  # Flash failure message
             return redirect(url_for('login'))  # Redirect to prevent form resubmission
