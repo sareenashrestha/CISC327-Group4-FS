@@ -12,9 +12,9 @@ def index():
 
 
 dummy = {
-    'user1@gmail.com': 'password1',
-    'user2@gmail.com': 'password2',
-    'user3@gmail.com': 'password3'
+    'user1@gmail.com': 'Password1!',
+    'user2@gmail.com': 'Password2!',
+    'user3@gmail.com': 'Password3!'
 }
 @app.route('/login', methods=['GET', 'POST'])
 def login():
