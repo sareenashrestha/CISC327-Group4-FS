@@ -100,7 +100,7 @@ bookings = [
     {"id": 2, "departure": "Calgary to Toronto", "date": "Friday, October 18th, 2024", "time": "1:49 - 6:32", "airline": "Air Canada"}
 ]
 
-@app.route('/')
+@app.route('/cancelBooking')
 def cancelBooking ():
     return render_template('cancelBooking.html', bookings=bookings)
 
