@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <title>Cancel Booking</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <script>
+            function confirmCancellation() {
+                return confirm("Are you sure you want to cacel this booking?");
+            }
+        </script>
+    </head>
+    
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/QU-logo.png') }}" alt="QU Airlines Logo">
+        </div>
+        <nav>
+            <a href="#">Help</a>
+            <a href="#">EN</a>
+            <a href="#"><i class="fas fa-heart heart-icon"></i></a>
+            <span>Welcome, John!</span>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        <h1>Cancel Booking</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="bookings-list">
+            {% for booking in bookings %}
+            <div class="booking-item">
+                <div class="Airline-Logo">
+                    <div class="logo-circle">
+                        {% if booking.airline == 'WestJet' %}
+                            <img src="{{ url_for('static', filename='images/WestJet-Logo.png') }}" alt="WestJet Logo">
+                        {% elif booking.airline == 'Air Canada' %}
+                            <img src="{{ url_for('static', filename='images/AirCanada-Logo.png') }}" alt="Air Canada Logo">
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="booking-info">
+                    <h3>Departure</h3>
+                    <p>Date: {{ booking.date }}</p>
+                    <p>Time: {{ booking.time }}</p>
+                    <p>{{ booking.departure }}</p>
+                </div>
+                <form action="{{ url_for('cancel_booking', booking_id=booking.id) }}" method="POST" onsubmit="return confirmCancellation()">
+                    <button type="submit" class="cancel-button">Cancel Booking</button>
+                </form>
+            </div>
+            <hr>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 QU Airlines. All rights reserved.</p>
+    </footer>
+</body>
+</html>
