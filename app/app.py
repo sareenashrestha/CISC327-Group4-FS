@@ -3,6 +3,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "asdf"
 
+# Validation regex patterns
+email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$'
+name_regex = r'^[A-Za-z]+$'
+dob_regex = r'^\d{4}-\d{2}-\d{2}$' 
+phone_regex = r'^\+?[0-9\s\-()]{10,}$'
+address_regex = r'^[a-zA-Z0-9\s,.\'-]{8,}$'
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -32,6 +40,57 @@ def login():
             return redirect(url_for('login'))  # Redirect to prevent form resubmission
 
     return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email'].strip()
+        password = request.form['password'].strip()
+        terms_accepted = 'termsCheck' in request.form
+
+        errors = {}
+
+        if not re.match(email_regex, email):
+            errors['email_error'] = 'Invalid email address.'
+        if not re.match(password_regex, password):
+            errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
+        if not terms_accepted:
+            errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
+
+        first_name = request.form['first_name'].strip()
+        last_name = request.form['last_name'].strip()
+        dob = request.form['dob'].strip()
+        gender = request.form['gender']
+
+        if not re.match(name_regex, first_name):
+            errors['first_name_error'] = 'First name can only contain letters.'
+        if not re.match(name_regex, last_name):
+            errors['last_name_error'] = 'Last name can only contain letters.'
+        if not re.match(dob_regex, dob):
+            errors['dob_error'] = 'Invalid date of birth. Enter in YYYY-MM-DD format.'
+        else:
+            birth_date = datetime.strptime(dob, '%Y-%m-%d')
+            today = datetime.today()
+            eighteen_years_ago = datetime(today.year - 18, today.month, today.day)
+            if birth_date > eighteen_years_ago:
+                errors['dob_error'] = 'You must be at least 18 years old.'
+        if not gender:
+            errors['gender_error'] = 'Please select a gender option.'
+
+        phone = request.form['phone'].strip()
+        address = request.form['address'].strip()
+
+        if not re.match(phone_regex, phone):
+            errors['phone_error'] = 'Invalid phone number. Must be at least 10 digits.'
+        if not re.match(address_regex, address):
+            errors['address_error'] = 'Invalid address. Please enter a valid address (at least 8 characters).'
+
+        if errors:
+            return render_template('register.html', errors=errors, form_data=request.form)
+        
+        return redirect(url_for('login'))
+
+    return render_template('register.html', errors={}, form_data={})
 
 if __name__ == '__main__':
     app.run(debug=True)
