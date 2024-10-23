@@ -84,9 +84,24 @@
             border-radius: 20px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
         }
+        .logo-container {
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 1000; 
+        }
+        .logo {
+            width: 100px; 
+            height: auto;
+        }
+        
     </style>
 </head>
 <body>
+     <div class="logo-container">
+        <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Logo" class="logo">
+    </div>
+    
     <div class="container">
         <h1>Become a Gael Reward Member!</h1>
 
