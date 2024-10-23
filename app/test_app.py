@@ -149,8 +149,8 @@ class TestRegistration(unittest.TestCase):
             phone='1234567890',
             address='123 Random St',
             termsCheck='on'
-        ), follow_redirects=True)
-        self.assertIn(b'Invalid date of birth. You must be atleast 18 years of age and enter in YYYY-MM-DD format.', response.data)
+            ), follow_redirects=True)
+         self.assertIn(b'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.', response.data)
 
     # test for when a user doesn't select a gender
     def test_invalid_gender(self):
