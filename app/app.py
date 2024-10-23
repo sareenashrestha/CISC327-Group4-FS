@@ -111,7 +111,7 @@ def cancel_booking(booking_id):
 
     if booking_to_cancel:
         bookings.remove(booking_to_cancel)
-        flash(f"Your booking from {booking_to_cancel['departure']} on {booking_to_cancel['date']} has been canceled successfully.")
+        flash('Your booking has been canceled successfully.')
         
     else:
         flash('Booking not found.')
