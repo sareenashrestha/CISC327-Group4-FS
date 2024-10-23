@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+import re
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "asdf"
@@ -85,6 +87,7 @@ def register():
         if not re.match(address_regex, address):
             errors['address_error'] = 'Invalid address. Please enter a valid address (at least 8 characters).'
 
+        # returns form with errors if any are found
         if errors:
             return render_template('register.html', errors=errors, form_data=request.form)
         
