@@ -84,9 +84,24 @@
             border-radius: 20px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
         }
+        .logo-container {
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 1000; 
+        }
+        .logo {
+            width: 100px; 
+            height: auto;
+        }
+        
     </style>
 </head>
 <body>
+     <div class="logo-container">
+        <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Logo" class="logo">
+    </div>
+    
     <div class="container">
         <h1>Become a Gael Reward Member!</h1>
 
@@ -140,8 +155,8 @@
                             <div id="lastNameError" class="error"></div>
                         </div>
                         <div class="form-group">
-                            <label for="dob">Date of Birth (DD/MM/YYYY)</label>
-                            <input type="text" class="form-control" id="dob" placeholder="DD/MM/YYYY">
+                            <label for="dob">Date of Birth (YYYY-MM-DD)</label>
+                            <input type="text" class="form-control" id="dob" placeholder="YYYY-MM-DD">
                             <div id="dobError" class="error"></div>
                         </div>
                         <div class="form-group">
@@ -187,11 +202,13 @@
         </div>
 
     <script>
-        
+
+        // function to check whether a given input matches a specified pattern
         function validateField(value, validChars) {
             return validChars.test(value);
         }
 
+         // function to validate email, password, and terms and condition checkbox
         function validateAccountDetails() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -200,42 +217,71 @@
             const emailValidChars = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const passwordValidChars = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
+            // validate email and password
             const emailValid = validateField(email, emailValidChars);
             const passwordValid = validateField(password, passwordValidChars);
 
+             // display error messages if validations fail
             document.getElementById('emailError').textContent = emailValid ? '' : 'Invalid email address.';
             document.getElementById('passwordError').textContent = passwordValid ? '' : 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.';
             document.getElementById('termsError').textContent = termsChecked ? '' : 'You must accept the Terms and Conditions to continue.';
 
+             // proceed to next section if all validations pass
             if (emailValid && passwordValid && termsChecked) {
                 toggleSection(2);
             }
         }
 
+        // function to validate personal details like user name, DOB, and gender
         function validatePersonalDetails() {
             const firstName = document.getElementById('first_name').value.trim();
             const lastName = document.getElementById('last_name').value.trim();
             const dob = document.getElementById('dob').value.trim();
             const gender = document.getElementById('gender').value;
-
+        
             const nameValidChars = /^[A-Za-z]+$/;
-            const dobValidChars = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d\d$/;
-
+            const dobValidChars = /^\d{4}-\d{2}-\d{2}$/;
+        
             const firstNameValid = validateField(firstName, nameValidChars);
             const lastNameValid = validateField(lastName, nameValidChars);
-            const dobValid = validateField(dob, dobValidChars);
+            let dobValid = validateField(dob, dobValidChars);
             const genderValid = gender !== ""; 
-
+        
+            if (dobValid) {
+                const birthDate = new Date(dob);
+                const today = new Date();
+        
+                // calculate age by comparing year, month, and day
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                const dayDiff = today.getDate() - birthDate.getDate();
+        
+                // adjust the age if the birth month and day have not occurred yet this year
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                    age--;
+                }
+        
+                // check if age is less than 18
+                if (age < 18) {
+                    dobValid = false;
+                    document.getElementById('dobError').textContent = 'You must be at least 18 years old.';
+                } else {
+                    document.getElementById('dobError').textContent = ''; // clear error if valid
+                }
+            } else {
+                document.getElementById('dobError').textContent = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.';
+            }
+        
             document.getElementById('firstNameError').textContent = firstNameValid ? '' : 'First name can only contain letters.';
             document.getElementById('lastNameError').textContent = lastNameValid ? '' : 'Last name can only contain letters.';
-            document.getElementById('dobError').textContent = dobValid ? '' : 'Invalid date of birth. You must be at least 18 and enter in DD/MM/YYYY format.';
             document.getElementById('genderError').textContent = genderValid ? '' : 'Please select a gender option.';
-
+        
             if (firstNameValid && lastNameValid && dobValid && genderValid) {
                 toggleSection(3);
             }
         }
 
+        // function to validate contact information
         function validateContactInformation() {
             const phone = document.getElementById('phone').value.trim();
             const address = document.getElementById('address').value.trim();
@@ -254,6 +300,7 @@
             }
         }
 
+         // function to toggle between form sections
         function toggleSection(sectionNumber) {
             const section = document.getElementById('section' + sectionNumber);
             const activeSection = document.querySelector('.section.active-section');
@@ -267,6 +314,7 @@
             section.querySelector('.header').classList.add('active');
         }
 
+         // function to redirect the user to the login page after successfully registering
         function redirectToLogin() {
             window.location.href = 'login.html';
         }
