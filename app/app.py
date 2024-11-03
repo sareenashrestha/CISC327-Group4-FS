@@ -100,8 +100,8 @@ def register():
         if errors:
             return render_template('register.html', errors=errors, form_data=request.form)
         
-        # Insert into database if there are no errors
         try:
+             # insert into database if there are no errors
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
@@ -110,7 +110,6 @@ def register():
             ''', (email, password, first_name, last_name, dob, gender, phone, address))
             conn.commit()
             conn.close()
-            flash("Registration successful! Please log in.")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             errors['email_error'] = "Email already registered."

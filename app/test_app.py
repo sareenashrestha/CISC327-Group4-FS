@@ -103,12 +103,12 @@ class TestRegistration(unittest.TestCase):
         # Attempt to register with the same email again
         response = self.app.post('/register', data=dict(
             email='duplicate@example.com',
-            password='AnotherP@ssw0rd!',
-            first_name='Another',
-            last_name='User',
-            dob='1995-08-15',
-            gender='female',
-            phone='0987654321',
+            password='P@ssw0rd!2',
+            first_name='FirstAgain',
+            last_name='LastAgain',
+            dob='1999-08-19',
+            gender='male',
+            phone='3233213223',
             address='456 Another St',
             termsCheck='on'
         ), follow_redirects=True)
@@ -116,8 +116,6 @@ class TestRegistration(unittest.TestCase):
         # Verify duplicate email error
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Email already registered.', response.data)
-
-    # Additional validation tests (e.g., test_invalid_email, test_invalid_password, etc.)
         
     # test for when a user enters an invalid email
     def test_invalid_email(self):

@@ -4,6 +4,8 @@ def init_db():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
+    #SQL command to create the 'users' table with columns for user information.
+    # 'email' column is unique to prevent duplicate entries
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,4 +25,4 @@ def init_db():
 
 if __name__ == "__main__":
     init_db()
-    print("Database initialized.")
+    print("Database has been initialized.")
