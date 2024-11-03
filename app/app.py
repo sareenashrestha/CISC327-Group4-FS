@@ -1,9 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, flash 
 import re
+import sqlite3
 from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = "asdf"
+
+def get_db_connection():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Validation regex patterns
 email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
@@ -45,6 +51,9 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'GET':
+        return render_template('register.html', errors={}, form_data={})
+    
     if request.method == 'POST':
         email = request.form['email'].strip()
         password = request.form['password'].strip()
@@ -91,9 +100,20 @@ def register():
         if errors:
             return render_template('register.html', errors=errors, form_data=request.form)
         
-        return redirect(url_for('login'))
-
-    return render_template('register.html', errors={}, form_data={})
+        try:
+             # insert into database if there are no errors
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (email, password, first_name, last_name, dob, gender, phone, address))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            errors['email_error'] = "Email already registered."
+            return render_template('register.html', errors=errors, form_data=request.form)
     
 bookings = [
     {"id": 1, "departure": "Toronto to Calgary", "date": "Tuesday, October 8th, 2024", "time": "08:00 - 12:24", "airline": "WestJet"},

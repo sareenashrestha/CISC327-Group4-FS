@@ -316,7 +316,7 @@
 
          // function to redirect the user to the login page after successfully registering
         function redirectToLogin() {
-            window.location.href = 'login.html';
+            window.location.href = "{{ url_for('login') }}";
         }
 
         document.getElementById('section1').classList.add('active-section');
@@ -325,5 +325,3 @@
 
 </body>
 </html>
-
-
