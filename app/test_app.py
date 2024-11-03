@@ -1,6 +1,6 @@
 import unittest
 from app import app, bookings
-import database_setup
+import init_database as database_setup
 from app import app, get_db_connection
 
 BASE_URL = "http://localhost:5000"
@@ -82,7 +82,7 @@ class TestRegistration(unittest.TestCase):
         self.assertIn(b'Email Address', response.data)
 
         conn = get_db_connection()
-        user = conn.execute("SELECT * FROM users WHERE email = ?", ('unique@example.com'))
+        user = conn.execute("SELECT * FROM users WHERE email = ?", ('unique@example.com',))
         conn.close()
         self.assertIsNotNone(user)
 
