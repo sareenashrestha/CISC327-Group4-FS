@@ -47,13 +47,7 @@ class TestRegistration(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-        # Clear the database before each test to ensure isolation
-        conn = get_db_connection()
-        conn.execute("DELETE FROM users")
-        conn.commit()
-        conn.close()
-    
-    def tearDown(self):
+        # Clear the database before each test
         conn = get_db_connection()
         conn.execute("DELETE FROM users")
         conn.commit()
@@ -82,7 +76,7 @@ class TestRegistration(unittest.TestCase):
         self.assertIn(b'Email Address', response.data)
 
         conn = get_db_connection()
-        user = conn.execute("SELECT * FROM users WHERE email = ?", ('unique@example.com'))
+        user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com'))
         conn.close()
         self.assertIsNotNone(user)
 
