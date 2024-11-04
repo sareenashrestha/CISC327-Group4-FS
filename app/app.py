@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import re
 import sqlite3
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = "asdf"
@@ -44,7 +45,7 @@ def login():
 
         # Conditions are if the query result is empty (input email doesn't exist in db)
         # or the input password doesn't match the stored password for that email
-        if not res or res[0] != password:
+        if not res or not check_password_hash(res[0], password):
             flash('Login failed. Invalid username or password.', 'danger')
             return redirect(url_for('login'))  # Redirect to prevent form resubmission
         

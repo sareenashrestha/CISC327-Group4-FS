@@ -1,7 +1,6 @@
 import unittest
-from app import app, bookings
+from app import app, bookings, get_db_connection, generate_password_hash
 import init_database as database_setup
-from app import app, get_db_connection
 
 BASE_URL = "http://localhost:5000"
 database_setup.init_db()
@@ -20,10 +19,11 @@ class TestLogin(unittest.TestCase):
 
         # Insert dummy data into the database
         try:
+            passHash = generate_password_hash('Password1!')
             conn.execute('''
                 INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', ('user1@gmail.com', 'Password1!', "First", "Last", "2000-06-20", "male", "1234567890", "123 Random St"))
+            ''', ('user1@gmail.com', passHash, "First", "Last", "2000-06-20", "male", "1234567890", "123 Random St"))
             conn.commit()
         except:
             pass
