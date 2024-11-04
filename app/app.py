@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import re
 import sqlite3
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = "asdf"
@@ -56,14 +57,14 @@ def register():
     
     if request.method == 'POST':
         email = request.form['email'].strip()
-        password = request.form['password'].strip()
+        password = generate_password_hash(request.form['password'].strip())
         terms_accepted = 'termsCheck' in request.form
 
         errors = {}
 
         if not re.match(email_regex, email):
             errors['email_error'] = 'Invalid email address.'
-        if not re.match(password_regex, password):
+        if not re.match(password_regex, request.form['password']):
             errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
         if not terms_accepted:
             errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
@@ -72,6 +73,8 @@ def register():
         last_name = request.form['last_name'].strip()
         dob = request.form['dob'].strip()
         gender = request.form['gender']
+        phone = request.form['phone'].strip()
+        address = request.form['address'].strip()
 
         if not re.match(name_regex, first_name):
             errors['first_name_error'] = 'First name can only contain letters.'
@@ -87,10 +90,6 @@ def register():
                 errors['dob_error'] = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.'
         if not gender:
             errors['gender_error'] = 'Please select a gender option.'
-
-        phone = request.form['phone'].strip()
-        address = request.form['address'].strip()
-
         if not re.match(phone_regex, phone):
             errors['phone_error'] = 'Invalid phone number. Must be at least 10 digits.'
         if not re.match(address_regex, address):
