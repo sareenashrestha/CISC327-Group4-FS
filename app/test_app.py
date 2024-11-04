@@ -1,6 +1,5 @@
 import unittest
 from app import app, bookings
-import database_setup
 from app import app, get_db_connection
 
 BASE_URL = "http://localhost:5000"
