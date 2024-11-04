@@ -26,26 +26,32 @@ def index():
         return render_template('index.html', user_input=user_input)
     return render_template('index.html', user_input=None)
 
-
-dummy = {
-    'user1@gmail.com': 'Password1!',
-    'user2@gmail.com': 'Password2!',
-    'user3@gmail.com': 'Password3!'
-}
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         # Get form data
-        username = request.form.get('username')
+        email = request.form.get('username')
         password = request.form.get('password')
 
-        # Check if username exists and password matches
-        if username in dummy and dummy[username] == password:
-            flash('Login successful!', 'success')  # Flash success message
-            return redirect(url_for('index'))  # Redirect to the main page
-        else:
-            flash('Login failed. Invalid username or password.', 'danger')  # Flash failure message
+        # Connect to database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Execute query to select the stored password from the users table where the email matches the input email
+        cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
+        res = cursor.fetchone() # Fetch one is used because there should be only one email based on the defined table (unique not null constraint)
+        conn.close()  # Close the connection
+
+        # Conditions are if the query result is empty (input email doesn't exist in db)
+        # or the input password doesn't match the stored password for that email
+        if not res or res[0] != password:
+            flash('Login failed. Invalid username or password.', 'danger')
             return redirect(url_for('login'))  # Redirect to prevent form resubmission
+        
+        # Else in this case is if the email exists and the password matches, aka successful login
+        else:
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))  # Redirect to the main page
 
     return render_template('login.html')
 
