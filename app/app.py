@@ -62,6 +62,13 @@ def register():
 
         errors = {}
 
+        # check for duplicate email before inserting the user
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        existing_user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        if existing_user:
+            errors['email_error'] = "Email already registered."
         if not re.match(email_regex, email):
             errors['email_error'] = 'Invalid email address.'
         if not re.match(password_regex, request.form['password']):
