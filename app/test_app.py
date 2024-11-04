@@ -1,9 +1,10 @@
 import unittest
 from app import app, bookings
+import init_database
 from app import app, get_db_connection
 
 BASE_URL = "http://localhost:5000"
-database_setup.init_db()
+init_database.init_db()
 
 class TestLogin(unittest.TestCase):
     
@@ -46,11 +47,10 @@ class TestRegistration(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-        # Clear the database before each test
-        conn = get_db_connection()
-        conn.execute("DELETE FROM users")
-        conn.commit()
-        conn.close()
+        # clear the database before each test
+        with get_db_connection() as conn:
+            conn.execute("DELETE FROM users")
+            conn.commit()
     
     # test for the page loading properly
     def test_page_load(self):
@@ -74,10 +74,9 @@ class TestRegistration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Email Address', response.data)
 
-        conn = get_db_connection()
-        user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com'))
-        conn.close()
-        self.assertIsNotNone(user)
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
 
     def test_duplicate_email_registration(self):
         # Register a user for the first time
