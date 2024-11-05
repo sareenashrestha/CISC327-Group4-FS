@@ -3,14 +3,13 @@ import re
 import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request, jsonify
+from init_database import init_db, get_db_connection
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = "asdf"
 
-def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+init_db()
 
 # Validation regex patterns
 email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
@@ -20,12 +19,22 @@ dob_regex = r'^\d{4}-\d{2}-\d{2}$'
 phone_regex = r'^\+?[0-9\s\-()]{10,}$'
 address_regex = r'^[a-zA-Z0-9\s,.\'-]{8,}$'
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         user_input = request.form['user_input']
         return render_template('index.html', user_input=user_input)
     return render_template('index.html', user_input=None)
+
+@app.route('/check_email', methods=['POST'])
+def check_email():
+    email = request.form.get('email')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    user = cursor.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    return jsonify({"exists": bool(user)})
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -63,25 +72,8 @@ def register():
     
     if request.method == 'POST':
         email = request.form['email'].strip()
-        password = generate_password_hash(request.form['password'].strip())
+        password = generate_password_hash(request.form['password'].strip()) # hash the pasword from the form input for secure storage
         terms_accepted = 'termsCheck' in request.form
-
-        errors = {}
-
-        # check for duplicate email before inserting the user
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        existing_user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-
-        if existing_user:
-            errors['email_error'] = "Email already registered."
-        if not re.match(email_regex, email):
-            errors['email_error'] = 'Invalid email address.'
-        if not re.match(password_regex, request.form['password']):
-            errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
-        if not terms_accepted:
-            errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
-
         first_name = request.form['first_name'].strip()
         last_name = request.form['last_name'].strip()
         dob = request.form['dob'].strip()
@@ -89,6 +81,20 @@ def register():
         phone = request.form['phone'].strip()
         address = request.form['address'].strip()
 
+        errors = {}
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        existing_user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        if existing_user:
+            errors['email_error'] = "Email already registered."  # check for duplicate email before inserting the user into the db
+        if not re.match(email_regex, email):
+            errors['email_error'] = 'Invalid email address.'
+        if not re.match(password_regex, request.form['password']):
+            errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
+        if not terms_accepted:
+            errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
         if not re.match(name_regex, first_name):
             errors['first_name_error'] = 'First name can only contain letters.'
         if not re.match(name_regex, last_name):
@@ -113,9 +119,7 @@ def register():
             return render_template('register.html', errors=errors, form_data=request.form)
         
         try:
-             # insert into database if there are no errors
-            conn = get_db_connection()
-            cursor = conn.cursor()
+            # insert into database if there are no errors
             cursor.execute('''
                 INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -124,6 +128,7 @@ def register():
             conn.close()
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
+            # return error if the email is already registered
             errors['email_error'] = "Email already registered."
             return render_template('register.html', errors=errors, form_data=request.form)
     

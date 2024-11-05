@@ -1,5 +1,6 @@
 import sqlite3
 
+# initalizes the SQLite database by creating the necessary tables
 def init_db():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -20,8 +21,13 @@ def init_db():
         )
     ''')
 
-    conn.commit()
     conn.close()
+
+# establishes a connection to the SQLite database
+def get_db_connection():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 if __name__ == "__main__":
     init_db()

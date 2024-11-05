@@ -59,7 +59,6 @@ class TestLogin(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
 class TestRegistration(unittest.TestCase):
-    
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
@@ -95,8 +94,9 @@ class TestRegistration(unittest.TestCase):
             user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
             self.assertIsNotNone(user)
 
+    # test for when the same email is registered twice
     def test_duplicate_email_registration(self):
-        # Register a user for the first time
+        # register a user for the first time
         self.app.post('/register', data=dict(
             email='duplicate@example.com',
             password='P@ssw0rd1',
@@ -109,7 +109,7 @@ class TestRegistration(unittest.TestCase):
             termsCheck='on'
         ), follow_redirects=True)
 
-        # Attempt to register with the same email again
+        # attempt to register with the same email again
         response = self.app.post('/register', data=dict(
             email='duplicate@example.com',
             password='P@ssw0rd!2',
@@ -122,7 +122,7 @@ class TestRegistration(unittest.TestCase):
             termsCheck='on'
         ), follow_redirects=True)
 
-        # Verify duplicate email error
+        # verify duplicate email error
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Email already registered.', response.data)
         
