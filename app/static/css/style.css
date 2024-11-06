@@ -1,0 +1,125 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header .logo img {
+    height: 80px;
+    width: auto;
+}
+
+.Airline-Logo img {
+    height: 60px;  
+    width: auto;   
+    margin-right: 5px; 
+}
+
+.logo-circle {
+    background-color: white;  
+    border-radius: 50%;       
+    display: flex;            
+    justify-content: center;  
+    align-items: center;      
+    height: 110px;             
+    width: 110px;              
+    margin-right: 17px;       
+    border: 2px solid #2f3b52; 
+}
+
+
+.header nav {
+    display: flex;
+    align-items: center;
+}
+
+.header nav a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #000;
+}
+
+.header nav span {
+    margin-left: 20px;
+    font-weight: bold;
+}
+
+.main-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+.bookings-list {
+    margin: 0 auto;
+}
+
+.booking-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #2f3b52;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 2px solid #8B0000;
+}
+
+
+
+
+.booking-info {
+    text-align: left;
+}
+
+.booking-info h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.booking-info p {
+    margin: 5px 0;
+}
+
+.cancel-button {
+    background-color: #8B0000;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.cancel-button:hover {
+    background-color: #A52A2A;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    margin-top: 40px;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
