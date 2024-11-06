@@ -1,5 +1,5 @@
 import unittest
-from app import app, bookings, get_db_connection, generate_password_hash
+from app import app, get_db_connection, generate_password_hash
 import init_database
 
 
@@ -265,61 +265,38 @@ class CancelBookingTestCase(unittest.TestCase):
     def setUp(self):
         # Setup test client and enable testing mode
         self.app = app.test_client()
-        self.app.testing = True
+        self.conn = get_db_connection()
+        self.conn.execute('DELETE FROM bookings')  # Clear bookings table before each test
+        self.conn.execute('INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (1, 1, 1, "active")')
+        self.conn.commit()
 
-        self.original_bookings = [
-            {"id": 1, "departure": "Toronto to Calgary", "date": "Tuesday, October 8th, 2024", "time": "08:00 - 12:24", "airline": "WestJet"},
-            {"id": 2, "departure": "Calgary to Toronto", "date": "Friday, October 18th, 2024", "time": "1:49 - 6:32", "airline": "Air Canada"}
-        ]
-        global bookings
-        bookings.clear()
-        bookings.extend(self.original_bookings)
+    def tearDown(self):
+        # Close connection and reset database after each test
+        self.conn.execute('DELETE FROM bookings')
+        self.conn.commit()
+        self.conn.close()
 
     def test_cancel_booking_success(self):
-        with app.app_context():
-            # Send POST request to cancel the booking with ID 1
-            response = self.app.post('/cancel/1', follow_redirects=True)
+        # Test successful cancellation of an existing booking
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+        booking = self.conn.execute('SELECT status FROM bookings WHERE booking_id = 1').fetchone()
+        self.assertEqual(booking['status'], 'canceled')  # Verify the booking status is updated
+        self.assertIn(b'Booking canceled successfully!', response.data)  # Check for success message in redirected response
+       
 
-            # Ensure the response is successful 
-            self.assertEqual(response.status_code, 200)
-
-            # Check if the flash message appears in the response
-            self.assertIn(b'Your booking has been canceled successfully.', response.data)
-
-            # Ensure booking with ID 1 has been removed from the global bookings
-            self.assertNotIn(1, [b['id'] for b in bookings])
-
-            # Also check the rendered HTML to verify booking removal
-            self.assertNotIn(b'Toronto to Calgary', response.data)
-
-    def test_cancel_booking_failure(self):
-        with app.app_context():
-            # Send POST request to cancel a booking that does not exist (ID 3)
-            response = self.app.post('/cancel/3', follow_redirects=True)
-
-            # Ensure the response is successful (HTTP 200)
-            self.assertEqual(response.status_code, 200)
-
-            # Check if the flash message appears in the response
-            self.assertIn(b'Booking not found.', response.data)
-
-            # Ensure bookings remain unchanged
-            self.assertEqual(len(bookings), 2)  # Should still have 2 bookings
-
-            # Check that both bookings are still present in the global bookings
-            self.assertIn(1, [b['id'] for b in bookings])
-            self.assertIn(2, [b['id'] for b in bookings])
+    def test_cancel_nonexistent_booking(self):
+        # Test trying to cancel a non-existent booking
+        response = self.app.post('/cancel_booking/9999', follow_redirects=True)
+        self.assertIn(b'Booking not found!', response.data)  # Check for "Booking not found" message
 
     def test_cancel_booking_when_list_is_empty(self):
-        with app.app_context():
-            # Clear all bookings
-            global bookings
-            bookings.clear()
-
-            # Try to cancel a booking when the list is empty
-            response = self.app.post('/cancel/1', follow_redirects=True)
-            self.assertIn(b'Booking not found.', response.data)
-            self.assertEqual(len(bookings), 0)  # Ensure the list remains empty
+        # Clear the bookings table directly
+        self.conn.execute('DELETE FROM bookings')
+        self.conn.commit()
+        
+        # Attempt to cancel a booking when no bookings are available
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+        self.assertIn(b'Booking not found!', response.data)  # Check for message in empty state
 
 if __name__ == '__main__':
     unittest.main()
