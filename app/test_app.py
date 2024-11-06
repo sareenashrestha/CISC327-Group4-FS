@@ -1,11 +1,33 @@
 import unittest
-from app import app, bookings
+from app import app, bookings, get_db_connection, generate_password_hash
+import init_database
+
+
+BASE_URL = "http://localhost:5000"
+init_database.init_db()
 
 class TestLogin(unittest.TestCase):
     
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+
+        # Connect to database and clear any data before each test
+        conn = get_db_connection()
+        conn.execute("DELETE FROM users")
+        conn.commit()
+
+
+        # Insert dummy data into the database
+        try:
+            passHash = generate_password_hash('Password1!')
+            conn.execute('''
+                INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', ('user1@gmail.com', passHash, "First", "Last", "2000-06-20", "male", "1234567890", "123 Random St"))
+            conn.commit()
+        except:
+            pass
 
     # Test for the page loading properly
     def test_page_load(self):
@@ -37,10 +59,14 @@ class TestLogin(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
 class TestRegistration(unittest.TestCase):
-    
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+
+        # clear the database before each test
+        with get_db_connection() as conn:
+            conn.execute("DELETE FROM users")
+            conn.commit()
     
     # test for the page loading properly
     def test_page_load(self):
@@ -60,9 +86,46 @@ class TestRegistration(unittest.TestCase):
             address='123 Random St',
             termsCheck='on'
         ), follow_redirects=True)
+       
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Email Address', response.data)
 
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
+
+    # test for when the same email is registered twice
+    def test_duplicate_email_registration(self):
+        # register a user for the first time
+        self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd1',
+            first_name='First',
+            last_name='Last',
+            dob='2000-06-20',
+            gender='male',
+            phone='1234567890',
+            address='123 Random St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # attempt to register with the same email again
+        response = self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd!2',
+            first_name='FirstAgain',
+            last_name='LastAgain',
+            dob='1999-08-19',
+            gender='male',
+            phone='3233213223',
+            address='456 Another St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # verify duplicate email error
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Email already registered.', response.data)
+        
     # test for when a user enters an invalid email
     def test_invalid_email(self):
         response = self.app.post('/register', data=dict(

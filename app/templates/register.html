@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body {
             display: flex;
@@ -94,7 +95,6 @@
             width: 100px; 
             height: auto;
         }
-        
     </style>
 </head>
 <body>
@@ -104,64 +104,62 @@
     
     <div class="container">
         <h1>Become a Gael Reward Member!</h1>
-
-        <!-- Step 1: Account Details -->
-        <div class="section" id="section1">
-            <div class="header">
-                Account Details
-                <div class="bubble">1</div>
-            </div>
-            <div class="section-content">
-                <div class="rounded-box">
-                    <form id="step1Form">
+        <form id="registerForm" method="POST" action="{{ url_for('register') }}">
+       
+            <!-- Step 1: Account Details -->
+            <div class="section active-section" id="section1">
+                <div class="header active">
+                    Account Details
+                    <div class="bubble">1</div>
+                </div>
+                <div class="section-content">
+                    <div class="rounded-box">
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" class="form-control" id="email" placeholder="Enter your email">
-                            <div id="emailError" class="error"></div>
+                            <input type="email" name="email" class="form-control" id="email" placeholder="Enter your email" value="{{ form_data.get('email', '') }}">
+                            <div id="emailError" class="error">{{ errors.get('email_error', '') }}</div>
                         </div>
                         <div class="form-group">
                             <label for="password">Create Password</label>
-                            <input type="password" class="form-control" id="password" placeholder="Enter your password">
-                            <div id="passwordError" class="error"></div>
+                            <input type="password" name="password" class="form-control" id="password" placeholder="Enter your password">
+                            <div id="passwordError" class="error">{{ errors.get('password_error', '') }}</div>
                         </div>
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="termsCheck">
+                            <input type="checkbox" name="termsCheck" class="form-check-input" id="termsCheck" {% if form_data.get('termsCheck') %}checked{% endif %}>
                             <label class="form-check-label" for="termsCheck">I have read and accepted QU's <a href="#">Terms and Conditions</a></label>
-                            <div id="termsError" class="error"></div>
+                            <div id="termsError" class="error">{{ errors.get('terms_error', '') }}</div>
                         </div>
                         <button type="button" class="btn-continue" onclick="validateAccountDetails()">Continue</button>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Step 2: Personal Details -->
-        <div class="section" id="section2">
-            <div class="header">
-                Personal Details
-                <div class="bubble">2</div>
-            </div>
-            <div class="section-content">
-                <div class="rounded-box">
-                    <form id="step2Form">
+            <!-- Step 2: Personal Details -->
+            <div class="section" id="section2">
+                <div class="header">
+                    Personal Details
+                    <div class="bubble">2</div>
+                </div>
+                <div class="section-content">
+                    <div class="rounded-box">
                         <div class="form-group">
                             <label for="first_name">First Name</label>
-                            <input type="text" class="form-control" id="first_name" placeholder="Enter your first name">
+                            <input type="text" name="first_name" class="form-control" id="first_name" placeholder="Enter your first name">
                             <div id="firstNameError" class="error"></div>
                         </div>
                         <div class="form-group">
                             <label for="last_name">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" placeholder="Enter your last name">
+                            <input type="text" name="last_name" class="form-control" id="last_name" placeholder="Enter your last name">
                             <div id="lastNameError" class="error"></div>
                         </div>
                         <div class="form-group">
                             <label for="dob">Date of Birth (YYYY-MM-DD)</label>
-                            <input type="text" class="form-control" id="dob" placeholder="YYYY-MM-DD">
+                            <input type="text" name="dob" class="form-control" id="dob" placeholder="YYYY-MM-DD">
                             <div id="dobError" class="error"></div>
                         </div>
                         <div class="form-group">
                             <label for="gender">Gender</label>
-                            <select class="form-control" id="gender">
+                            <select name="gender" class="form-control" id="gender">
                                 <option value="" disabled selected>Select your gender</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
@@ -171,159 +169,151 @@
                             <div id="genderError" class="error"></div>
                         </div>
                         <button type="button" class="btn-continue" onclick="validatePersonalDetails()">Continue</button>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Step 3: Contact Information -->
-        <div class="section" id="section3">
-            <div class="header">
-                Contact Information
-                <div class="bubble">3</div>
-            </div>
-            <div class="section-content">
-                <div class="rounded-box">
-                    <form id="step3Form">
+            <!-- Step 3: Contact Information -->
+            <div class="section" id="section3">
+                <div class="header">
+                    Contact Information
+                    <div class="bubble">3</div>
+                </div>
+                <div class="section-content">
+                    <div class="rounded-box">
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number">
+                            <input type="tel" name="phone" class="form-control" id="phone" placeholder="Enter your phone number">
                             <div id="phoneError" class="error"></div>
                         </div>
                         <div class="form-group">
                             <label for="address">Address</label>
-                            <input type="text" class="form-control" id="address" placeholder="Enter your address">
+                            <input type="text" name="address" class="form-control" id="address" placeholder="Enter your address">
                             <div id="addressError" class="error"></div>
                         </div>
                         <button type="button" class="btn-continue" onclick="validateContactInformation()">Submit</button>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
+        
+       <!-- include jQuery for easier AJAX -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+        <script>
+            function validateField(value, validChars) {
+                return validChars.test(value);
+            }
+            
+            // check if email already exists in the database
+            function checkEmailExists(email, callback) {
+                $.ajax({
+                    url: "/check_email", // URL endpoint to check email
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ email: email }),
+                    success: function(response) {
+                        callback(response.exists); // calls the callback with the existence result
+                    },
+                    error: function() {
+                        callback(false); // if there's an error, assume the email doesn't exist
+                    }
+                });
+            }
 
-    <script>
+            function validateAccountDetails() {
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const termsChecked = document.getElementById('termsCheck').checked;
 
-        // function to check whether a given input matches a specified pattern
-        function validateField(value, validChars) {
-            return validChars.test(value);
-        }
+                const emailValidChars = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const passwordValidChars = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
-         // function to validate email, password, and terms and condition checkbox
-        function validateAccountDetails() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const termsChecked = document.getElementById('termsCheck').checked;
-
-            const emailValidChars = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const passwordValidChars = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
-
-            // validate email and password
-            const emailValid = validateField(email, emailValidChars);
-            const passwordValid = validateField(password, passwordValidChars);
-
-             // display error messages if validations fail
-            document.getElementById('emailError').textContent = emailValid ? '' : 'Invalid email address.';
-            document.getElementById('passwordError').textContent = passwordValid ? '' : 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.';
-            document.getElementById('termsError').textContent = termsChecked ? '' : 'You must accept the Terms and Conditions to continue.';
-
-             // proceed to next section if all validations pass
-            if (emailValid && passwordValid && termsChecked) {
-                toggleSection(2);
+                const emailValid = validateField(email, emailValidChars);
+                const passwordValid = validateField(password, passwordValidChars);
+                
+                document.getElementById('emailError').textContent = emailValid ? '' : 'Invalid email address. Please enter a valid address (at least 8 characters)';
+                document.getElementById('passwordError').textContent = passwordValid ? '' : 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.';
+                document.getElementById('termsError').textContent = termsChecked ? '' : 'You must accept the Terms and Conditions to continue.';
+                
+                if (emailValid && passwordValid && termsChecked) {
+                    checkEmailExists(email, function(emailExists) {
+                        if (emailExists) {
+                            document.getElementById('emailError').textContent = "Email already registered.";
+                        } else {
+                            toggleSection(2)
+                        }
+                    });
             }
         }
 
-        // function to validate personal details like user name, DOB, and gender
-        function validatePersonalDetails() {
-            const firstName = document.getElementById('first_name').value.trim();
-            const lastName = document.getElementById('last_name').value.trim();
-            const dob = document.getElementById('dob').value.trim();
-            const gender = document.getElementById('gender').value;
-        
-            const nameValidChars = /^[A-Za-z]+$/;
-            const dobValidChars = /^\d{4}-\d{2}-\d{2}$/;
-        
-            const firstNameValid = validateField(firstName, nameValidChars);
-            const lastNameValid = validateField(lastName, nameValidChars);
-            let dobValid = validateField(dob, dobValidChars);
-            const genderValid = gender !== ""; 
-        
-            if (dobValid) {
-                const birthDate = new Date(dob);
-                const today = new Date();
-        
-                // calculate age by comparing year, month, and day
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const monthDiff = today.getMonth() - birthDate.getMonth();
-                const dayDiff = today.getDate() - birthDate.getDate();
-        
-                // adjust the age if the birth month and day have not occurred yet this year
-                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-                    age--;
-                }
-        
-                // check if age is less than 18
-                if (age < 18) {
-                    dobValid = false;
-                    document.getElementById('dobError').textContent = 'You must be at least 18 years old.';
+            function validatePersonalDetails() {
+                const firstName = document.getElementById('first_name').value.trim();
+                const lastName = document.getElementById('last_name').value.trim();
+                const dob = document.getElementById('dob').value.trim();
+                const gender = document.getElementById('gender').value;
+
+                const nameValidChars = /^[A-Za-z]+$/;
+                const dobValidChars = /^\d{4}-\d{2}-\d{2}$/;
+
+                const firstNameValid = validateField(firstName, nameValidChars);
+                const lastNameValid = validateField(lastName, nameValidChars);
+                let dobValid = validateField(dob, dobValidChars);
+                const genderValid = gender !== ""; 
+
+                if (dobValid) {
+                    const birthDate = new Date(dob);
+                    const today = new Date();
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    if (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())) age--;
+                    dobValid = age >= 18;
+                    document.getElementById('dobError').textContent = dobValid ? '' : 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.';
                 } else {
-                    document.getElementById('dobError').textContent = ''; // clear error if valid
+                    document.getElementById('dobError').textContent = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.';
                 }
-            } else {
-                document.getElementById('dobError').textContent = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.';
-            }
-        
-            document.getElementById('firstNameError').textContent = firstNameValid ? '' : 'First name can only contain letters.';
-            document.getElementById('lastNameError').textContent = lastNameValid ? '' : 'Last name can only contain letters.';
-            document.getElementById('genderError').textContent = genderValid ? '' : 'Please select a gender option.';
-        
-            if (firstNameValid && lastNameValid && dobValid && genderValid) {
-                toggleSection(3);
-            }
-        }
 
-        // function to validate contact information
-        function validateContactInformation() {
-            const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
+                document.getElementById('firstNameError').textContent = firstNameValid ? '' : 'First name can only contain letters.';
+                document.getElementById('lastNameError').textContent = lastNameValid ? '' : 'Last name can only contain letters.';
+                document.getElementById('genderError').textContent = genderValid ? '' : 'Please select a gender option.';
 
-            const phoneValidChars = /^\+?[0-9\s\-()]{10,}$/;
-            const addressValidChars = /^[a-zA-Z0-9\s,.'-]{8,}$/;
-
-            const phoneValid = validateField(phone, phoneValidChars);
-            const addressValid = validateField(address, addressValidChars);
-
-            document.getElementById('phoneError').textContent = phoneValid ? '' : 'Invalid phone number. Must be at least 10 digits.';
-            document.getElementById('addressError').textContent = addressValid ? '' : 'Invalid address. Please enter a valid address (at least 8 characters).';
-
-            if (phoneValid && addressValid) {
-                redirectToLogin();
-            }
-        }
-
-         // function to toggle between form sections
-        function toggleSection(sectionNumber) {
-            const section = document.getElementById('section' + sectionNumber);
-            const activeSection = document.querySelector('.section.active-section');
-
-            if (activeSection) {
-                activeSection.classList.remove('active-section');
-                activeSection.querySelector('.header').classList.remove('active');
+                if (firstNameValid && lastNameValid && dobValid && genderValid) {
+                    toggleSection(3);
+                }
             }
 
-            section.classList.add('active-section');
-            section.querySelector('.header').classList.add('active');
-        }
+            function validateContactInformation() {
+                const phone = document.getElementById('phone').value.trim();
+                const address = document.getElementById('address').value.trim();
 
-         // function to redirect the user to the login page after successfully registering
-        function redirectToLogin() {
-            window.location.href = 'login.html';
-        }
+                const phoneValidChars = /^\+?[0-9\s\-()]{10,}$/;
+                const addressValidChars = /^[a-zA-Z0-9\s,.'-]{8,}$/;
 
-        document.getElementById('section1').classList.add('active-section');
-        document.querySelector('#section1 .header').classList.add('active');
-    </script>
+                const phoneValid = validateField(phone, phoneValidChars);
+                const addressValid = validateField(address, addressValidChars);
 
+                document.getElementById('phoneError').textContent = phoneValid ? '' : 'Invalid phone number. Must be at least 10 digits.';
+                document.getElementById('addressError').textContent = addressValid ? '' : 'Invalid address. Please enter a valid address (at least 8 characters).';
+
+                if (phoneValid && addressValid) {
+                    document.getElementById('registerForm').submit();
+                }
+            }
+
+            function toggleSection(sectionNumber) {
+                const section = document.getElementById('section' + sectionNumber);
+                const activeSection = document.querySelector('.section.active-section');
+
+                if (activeSection) {
+                    activeSection.classList.remove('active-section');
+                    activeSection.querySelector('.header').classList.remove('active');
+                }
+
+                section.classList.add('active-section');
+                section.querySelector('.header').classList.add('active');
+            }
+
+            document.getElementById('section1').classList.add('active-section');
+            document.querySelector('#section1 .header').classList.add('active');
+        </script>
+    </div>
 </body>
 </html>
-
-
