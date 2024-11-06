@@ -152,9 +152,6 @@ def cancelBooking():
 '''
 
     bookings = conn.execute(query).fetchall()
-    print(bookings)
-    if not bookings:
-        print("No bookings found.")
     conn.close()
     firstName = "John" 
     return render_template('cancelBooking.html', bookings=bookings, firstName=firstName)
