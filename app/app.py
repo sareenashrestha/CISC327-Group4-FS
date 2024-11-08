@@ -131,29 +131,50 @@ def register():
             # return error if the email is already registered
             errors['email_error'] = "Email already registered."
             return render_template('register.html', errors=errors, form_data=request.form)
-    
-bookings = [
-    {"id": 1, "departure": "Toronto to Calgary", "date": "Tuesday, October 8th, 2024", "time": "08:00 - 12:24", "airline": "WestJet"},
-    {"id": 2, "departure": "Calgary to Toronto", "date": "Friday, October 18th, 2024", "time": "1:49 - 6:32", "airline": "Air Canada"}
-]
 
+
+# Database connection function
+def get_db_connection():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Home route - User's page displaying bookings
 @app.route('/cancelBooking')
-def cancelBooking ():
-    return render_template('cancelBooking.html', bookings=bookings)
+def cancelBooking():
+    conn = get_db_connection()
 
-@app.route('/cancel/<int:booking_id>', methods=['POST'])
+    query = '''
+    SELECT bookings.booking_id, flights.destination, flights.departure, flights.airline
+    FROM bookings
+    JOIN flights ON bookings.flight_id = flights.flight_id
+    WHERE bookings.status = "active";
+'''
+
+    bookings = conn.execute(query).fetchall()
+    conn.close()
+    firstName = "John" 
+    return render_template('cancelBooking.html', bookings=bookings, firstName=firstName)
+
+
+# Cancel booking route
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
 def cancel_booking(booking_id):
-    global bookings
-    booking_to_cancel = next((b for b in bookings if b['id'] == booking_id), None)
+    conn = get_db_connection()
+    booking = conn.execute('SELECT * FROM bookings WHERE booking_id = ?', (booking_id,)).fetchone()
+    
+    if booking is None:
+        flash('Booking not found!', 'error')
+        return redirect(url_for('cancelBooking'))
 
-    if booking_to_cancel:
-        bookings.remove(booking_to_cancel)
-        flash('Your booking has been canceled successfully.')
-        
-    else:
-        flash('Booking not found.')
+    # Confirm the cancellation and update the booking status
+    conn.execute('UPDATE bookings SET status = ? WHERE booking_id = ?', ('canceled', booking_id))
+    conn.commit()
+    conn.close()
+    
+    flash('Booking canceled successfully!', 'success')
+    return redirect(url_for('cancelBooking'))
 
-    return redirect(url_for('cancelBooking'))  
 
 if __name__ == '__main__':
     app.run(debug=True)

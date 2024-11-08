@@ -8,11 +8,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
         <script>
             function confirmCancellation() {
-                return confirm("Are you sure you want to cacel this booking?");
+                return confirm("Are you sure you want to cancel this booking?");
             }
         </script>
     </head>
-    
+
 <body>
     <header class="header">
         <div class="logo">
@@ -22,7 +22,8 @@
             <a href="#">Help</a>
             <a href="#">EN</a>
             <a href="#"><i class="fas fa-heart heart-icon"></i></a>
-            <span>Welcome, John!</span>
+            <span>Welcome, {{ firstName }}!</span>
+
         </nav>
     </header>
 
@@ -46,20 +47,20 @@
             <div class="booking-item">
                 <div class="Airline-Logo">
                     <div class="logo-circle">
-                        {% if booking.airline == 'WestJet' %}
+                        {% if booking['airline'] == 'WestJet' %}
                             <img src="{{ url_for('static', filename='images/WestJet-Logo.png') }}" alt="WestJet Logo">
-                        {% elif booking.airline == 'Air Canada' %}
+                        {% elif booking['airline'] == 'Air Canada' %}
                             <img src="{{ url_for('static', filename='images/AirCanada-Logo.png') }}" alt="Air Canada Logo">
                         {% endif %}
                     </div>
                 </div>
                 <div class="booking-info">
                     <h3>Departure</h3>
-                    <p>Date: {{ booking.date }}</p>
-                    <p>Time: {{ booking.time }}</p>
-                    <p>{{ booking.departure }}</p>
-                </div>
-                <form action="{{ url_for('cancel_booking', booking_id=booking.id) }}" method="POST" onsubmit="return confirmCancellation()">
+                    <p>Date: {{ booking['departure'].split(' ')[0] }}</p>
+                    <p>Time: {{ booking['departure'].split(' ')[1] }}</p>
+                    <p>{{ booking['destination'] }}</p>
+                </div>                
+                <form action="{{ url_for('cancel_booking', booking_id=booking['booking_id']) }}" method="POST" onsubmit="return confirmCancellation()">
                     <button type="submit" class="cancel-button">Cancel Booking</button>
                 </form>
             </div>
@@ -71,5 +72,21 @@
     <footer>
         <p>&copy; 2024 QU Airlines. All rights reserved.</p>
     </footer>
+
+    <script>
+        function confirmCancel(bookingId) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                fetch(`/cancel_booking/${bookingId}`, { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Failed to cancel booking.");
+                        }
+                    });
+            }
+        }
+    </script>
+    
 </body>
 </html>
