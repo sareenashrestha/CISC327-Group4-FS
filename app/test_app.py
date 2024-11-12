@@ -30,6 +30,12 @@ class TestIntegration(unittest.TestCase):
         ), follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Email Address', response.data)
+
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
+
 
         response = self.app.post('/login', data=dict(
             username='validemail@example.com',
