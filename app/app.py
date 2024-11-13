@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash 
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import re
 import sqlite3
 from datetime import datetime
@@ -60,7 +60,8 @@ def login():
         
         # Else in this case is if the email exists and the password matches, aka successful login
         else:
-            flash('Login successful!', 'success')
+            session['logged_in'] = True
+            session['user_email'] = email
             return redirect(url_for('index'))  # Redirect to the main page
 
     return render_template('login.html')
