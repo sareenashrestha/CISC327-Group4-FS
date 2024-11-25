@@ -104,6 +104,13 @@
     
     <div class="container">
         <h1>Become a Gael Reward Member!</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
         <form id="registerForm" method="POST" action="{{ url_for('register') }}">
        
             <!-- Step 1: Account Details -->
@@ -160,11 +167,11 @@
                         <div class="form-group">
                             <label for="gender">Gender</label>
                             <select name="gender" class="form-control" id="gender">
-                                <option value="" disabled selected>Select your gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="non-binary">Non-Binary</option>
-                                <option value="prefer_not_to_say">Prefer not to say</option>
+                                <option value="" disabled {% if not form_data.get('gender') %}selected{% endif %}>Select your gender</option>
+                                <option value="male" {% if form_data.get('gender') == 'male' %}selected{% endif %}>Male</option>
+                                <option value="female" {% if form_data.get('gender') == 'female' %}selected{% endif %}>Female</option>
+                                <option value="non-binary" {% if form_data.get('gender') == 'non-binary' %}selected{% endif %}>Non-Binary</option>
+                                <option value="prefer_not_to_say" {% if form_data.get('gender') == 'prefer_not_to_say' %}selected{% endif %}>Prefer not to say</option>
                             </select>
                             <div id="genderError" class="error"></div>
                         </div>
