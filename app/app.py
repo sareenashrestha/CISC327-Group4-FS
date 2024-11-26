@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import re
 import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import request, jsonify
 from init_database import init_db, get_db_connection
 
 app = Flask(__name__, static_folder='static')
@@ -73,7 +72,7 @@ def register():
     
     if request.method == 'POST':
         email = request.form['email'].strip()
-        password = generate_password_hash(request.form['password'].strip()) # hash the pasword from the form input for secure storage
+        password = generate_password_hash(request.form['password'].strip())  # Hash password for secure storage
         terms_accepted = 'termsCheck' in request.form
         first_name = request.form['first_name'].strip()
         last_name = request.form['last_name'].strip()
@@ -84,55 +83,61 @@ def register():
 
         errors = {}
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        existing_user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-
-        if existing_user:
-            errors['email_error'] = "Email already registered."  # check for duplicate email before inserting the user into the db
-        if not re.match(email_regex, email):
-            errors['email_error'] = 'Invalid email address.'
-        if not re.match(password_regex, request.form['password']):
-            errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
-        if not terms_accepted:
-            errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
-        if not re.match(name_regex, first_name):
-            errors['first_name_error'] = 'First name can only contain letters.'
-        if not re.match(name_regex, last_name):
-            errors['last_name_error'] = 'Last name can only contain letters.'
-        if not re.match(dob_regex, dob):
-            errors['dob_error'] = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.'
-        else:
-            birth_date = datetime.strptime(dob, '%Y-%m-%d')
-            today = datetime.today()
-            eighteen_years_ago = datetime(today.year - 18, today.month, today.day)
-            if birth_date > eighteen_years_ago:
-                errors['dob_error'] = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.'
-        if not gender:
-            errors['gender_error'] = 'Please select a gender option.'
-        if not re.match(phone_regex, phone):
-            errors['phone_error'] = 'Invalid phone number. Must be at least 10 digits.'
-        if not re.match(address_regex, address):
-            errors['address_error'] = 'Invalid address. Please enter a valid address (at least 8 characters).'
-
-        # returns form with errors if any are found
-        if errors:
-            return render_template('register.html', errors=errors, form_data=request.form)
-        
         try:
-            # insert into database if there are no errors
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            existing_user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            if existing_user:
+                errors['email_error'] = "Email already registered."
+            if not re.match(email_regex, email):
+                errors['email_error'] = 'Invalid email address.'
+            if not re.match(password_regex, request.form['password']):
+                errors['password_error'] = 'Password must be at least 8 characters long, include a special character, and mix of uppercase/lowercase.'
+            if not terms_accepted:
+                errors['terms_error'] = 'You must accept the Terms and Conditions to continue.'
+            if not re.match(name_regex, first_name):
+                errors['first_name_error'] = 'First name can only contain letters.'
+            if not re.match(name_regex, last_name):
+                errors['last_name_error'] = 'Last name can only contain letters.'
+            if not re.match(dob_regex, dob):
+                errors['dob_error'] = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.'
+            else:
+                birth_date = datetime.strptime(dob, '%Y-%m-%d')
+                if birth_date > datetime.now().replace(year=datetime.now().year - 18):
+                    errors['dob_error'] = 'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.'
+            if not gender:
+                errors['gender_error'] = 'Please select a gender option.'
+            if not re.match(phone_regex, phone):
+                errors['phone_error'] = 'Invalid phone number. Must be at least 10 digits.'
+            if not re.match(address_regex, address):
+                errors['address_error'] = 'Invalid address. Please enter a valid address (at least 8 characters).'
+
+            if errors:
+                return render_template('register.html', errors=errors, form_data=request.form)
+
             cursor.execute('''
                 INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (email, password, first_name, last_name, dob, gender, phone, address))
             conn.commit()
             conn.close()
+            flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
+
         except sqlite3.IntegrityError:
-            # return error if the email is already registered
             errors['email_error'] = "Email already registered."
             return render_template('register.html', errors=errors, form_data=request.form)
 
+        except sqlite3.DatabaseError as db_err:
+            app.logger.error(f"Database error: {db_err}")
+            flash('Registration failed, please try again later.', 'danger')
+            return render_template('register.html', errors={}, form_data=request.form), 500
+
+        except Exception as e:
+            app.logger.error(f"Unexpected error: {e}")
+            flash('An unexpected error occurred. Please try again later.', 'danger')
+            return render_template('register.html', errors={}, form_data=request.form), 500
 
 # Database connection function
 def get_db_connection():

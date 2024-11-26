@@ -1,6 +1,8 @@
 import unittest
 from app import app, get_db_connection, generate_password_hash
 import init_database
+from unittest.mock import patch
+import sqlite3
 
 
 # BASE_URL = "http://localhost:5000"
@@ -170,6 +172,31 @@ class TestRegistration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Email already registered.', response.data)
         
+    # simulate a database error to test if the registration endpoint handles database exceptions properly
+    def test_database_rollback_on_error(self):
+        new_user = {
+            'email': 'erroruser@example.com',
+            'password': 'P@ssw0rd1',
+            'first_name': 'Error',
+            'last_name': 'User',
+            'dob': '2000-01-01',
+            'gender': 'male',
+            'phone': '1234567890',
+            'address': '123 Error St',
+            'termsCheck': 'on'
+        }
+
+        with patch('app.get_db_connection', side_effect=sqlite3.DatabaseError('Simulated database error')):
+            response = self.app.post('/register', data=new_user, follow_redirects=True)
+            self.assertEqual(response.status_code, 500)
+            self.assertIn(b'Registration failed, please try again later.', response.data)
+
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', ('erroruser@example.com',)).fetchone()
+        conn.close()
+
+        self.assertIsNone(user)
+
     # test for when a user enters an invalid email
     def test_invalid_email(self):
         response = self.app.post('/register', data=dict(
