@@ -3,10 +3,13 @@ import re
 import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request, jsonify
 from init_database import init_db, get_db_connection
 
-app = Flask(__name__, static_folder='static')
-app.config['SECRET_KEY'] = "asdf"
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+
+init_db()
 
 init_db()
 
@@ -71,7 +74,7 @@ def register():
     
     if request.method == 'POST':
         email = request.form['email'].strip()
-        password = generate_password_hash(request.form['password'].strip())  # Hash password for secure storage
+        password = generate_password_hash(request.form['password'].strip()) # hash the pasword from the form input for secure storage
         terms_accepted = 'termsCheck' in request.form
         first_name = request.form['first_name'].strip()
         last_name = request.form['last_name'].strip()

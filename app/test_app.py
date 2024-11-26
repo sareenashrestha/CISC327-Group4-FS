@@ -153,6 +153,42 @@ class TestRegistration(unittest.TestCase):
 
         self.assertIsNone(user)
 
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
+
+    # test for when the same email is registered twice
+    def test_duplicate_email_registration(self):
+        # register a user for the first time
+        self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd1',
+            first_name='First',
+            last_name='Last',
+            dob='2000-06-20',
+            gender='male',
+            phone='1234567890',
+            address='123 Random St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # attempt to register with the same email again
+        response = self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd!2',
+            first_name='FirstAgain',
+            last_name='LastAgain',
+            dob='1999-08-19',
+            gender='male',
+            phone='3233213223',
+            address='456 Another St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # verify duplicate email error
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Email already registered.', response.data)
+        
     # test for when a user enters an invalid email
     def test_invalid_email(self):
         response = self.app.post('/register', data=dict(
@@ -287,19 +323,32 @@ class TestRegistration(unittest.TestCase):
         ), follow_redirects=True)
         self.assertIn(b'Invalid address. Please enter a valid address (at least 8 characters).', response.data)
 
-class CancelBookingTestCase(unittest.TestCase):
-
+class TestCancelBookingIntegration(unittest.TestCase):
     def setUp(self):
         # Setup test client and enable testing mode
         self.app = app.test_client()
         self.conn = get_db_connection()
-        self.conn.execute('DELETE FROM bookings')  # Clear bookings table before each test
-        self.conn.execute('INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (1, 1, 1, "active")')
+
+        # Clear and prepare the database for the test
+        self.conn.execute("DELETE FROM bookings")
+        self.conn.execute("DELETE FROM flights")
+        self.conn.commit()
+
+        # Insert test data
+        self.conn.execute("INSERT INTO flights (destination, departure, airline) VALUES (?, ?, ?)",
+                          ('Toronto to Calgary', '2024-12-01 10:00:00', 'Air Canada'))
+        self.conn.execute("INSERT INTO flights (destination, departure, airline) VALUES (?, ?, ?)",
+                          ('Calgary to Toronto', '2024-12-06 03:00:00', 'WestJet'))
+        self.conn.execute("INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (?, ?, ?, ?)",
+                          (1, 1, 1, 'active'))
+        self.conn.execute("INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (?, ?, ?, ?)",
+                          (2, 1, 2, 'active'))
         self.conn.commit()
 
     def tearDown(self):
-        # Close connection and reset database after each test
-        self.conn.execute('DELETE FROM bookings')
+        # Clean up the database after tests
+        self.conn.execute("DELETE FROM bookings")
+        self.conn.execute("DELETE FROM flights")
         self.conn.commit()
         self.conn.close()
 
@@ -307,9 +356,8 @@ class CancelBookingTestCase(unittest.TestCase):
         # Test successful cancellation of an existing booking
         response = self.app.post('/cancel_booking/1', follow_redirects=True)
         booking = self.conn.execute('SELECT status FROM bookings WHERE booking_id = 1').fetchone()
-        self.assertEqual(booking['status'], 'canceled')  # Verify the booking status is updated
-        self.assertIn(b'Booking canceled successfully!', response.data)  # Check for success message in redirected response
-       
+        self.assertEqual(booking['status'], 'canceled')  # Verify booking status updated
+        self.assertIn(b'Booking canceled successfully!', response.data)  # Check flash message
 
     def test_cancel_nonexistent_booking(self):
         # Test trying to cancel a non-existent booking
@@ -317,14 +365,31 @@ class CancelBookingTestCase(unittest.TestCase):
         self.assertIn(b'Booking not found!', response.data)  # Check for "Booking not found" message
 
     def test_cancel_booking_when_list_is_empty(self):
-        # Clear the bookings table directly
-        self.conn.execute('DELETE FROM bookings')
+        # Clear all bookings
+        self.conn.execute("DELETE FROM bookings")
         self.conn.commit()
-        
-        # Attempt to cancel a booking when no bookings are available
-        response = self.app.post('/cancel_booking/1', follow_redirects=True)
-        self.assertIn(b'Booking not found!', response.data)  # Check for message in empty state
 
+        # Attempt to cancel a booking when no bookings exist
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+        self.assertIn(b'Booking not found!', response.data)  # Verify appropriate flash message
+
+    def test_cancel_booking_and_check_page(self):
+         
+        # Step 1: Cancel the booking and follow the redirect to ensure flash message is consumed
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+
+        # Step 2: Verify the flash message in the response of the redirect
+        self.assertIn(b'Booking canceled successfully!', response.data)
+
+        # Step 3: Fetch the cancelBooking page
+        response = self.app.get('/cancelBooking')
+
+        # Step 4: Confirm that the canceled booking is no longer listed
+        self.assertNotIn(b'Toronto to Calgary', response.data)
+
+    
+
+        
 if __name__ == '__main__':
     unittest.main()
     
