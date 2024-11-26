@@ -1,11 +1,35 @@
 import unittest
-from app import app
+from app import app, get_db_connection, generate_password_hash
+import init_database
+from unittest.mock import patch
+import sqlite3
+
+
+BASE_URL = "http://localhost:5000"
+init_database.init_db()
 
 class TestLogin(unittest.TestCase):
     
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+
+        # Connect to database and clear any data before each test
+        conn = get_db_connection()
+        conn.execute("DELETE FROM users")
+        conn.commit()
+
+
+        # Insert dummy data into the database
+        try:
+            passHash = generate_password_hash('Password1!')
+            conn.execute('''
+                INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', ('user1@gmail.com', passHash, "First", "Last", "2000-06-20", "male", "1234567890", "123 Random St"))
+            conn.commit()
+        except:
+            pass
 
     # Test for the page loading properly
     def test_page_load(self):
@@ -15,7 +39,7 @@ class TestLogin(unittest.TestCase):
     # Testing for when a user successfully logs in, with their email and password in the dummy hashmap
     def test_successful_login(self):
         # Redirecting is false, as the check for the flash message should be done before the redirest
-        response = self.app.post('/login', data=dict(username='user1@gmail.com', password='password1'), follow_redirects=False)
+        response = self.app.post('/login', data=dict(username='user1@gmail.com', password='Password1!'), follow_redirects=False)
         self.assertEqual(response.status_code, 302) # 302 is the status code for redirect
 
         # This will grab the session data, which will include the flash message, then check if the right flash message is in the session data
@@ -37,10 +61,14 @@ class TestLogin(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
 class TestRegistration(unittest.TestCase):
-    
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+
+        # clear the database before each test
+        with get_db_connection() as conn:
+            conn.execute("DELETE FROM users")
+            conn.commit()
     
     # test for the page loading properly
     def test_page_load(self):
@@ -60,8 +88,70 @@ class TestRegistration(unittest.TestCase):
             address='123 Random St',
             termsCheck='on'
         ), follow_redirects=True)
+       
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Login', response.data)
+        self.assertIn(b'Email Address', response.data)
+
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
+
+    # test for when the same email is registered twice
+    def test_duplicate_email_registration(self):
+        # register a user for the first time
+        self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd1',
+            first_name='First',
+            last_name='Last',
+            dob='2000-06-20',
+            gender='male',
+            phone='1234567890',
+            address='123 Random St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # attempt to register with the same email again
+        response = self.app.post('/register', data=dict(
+            email='duplicate@example.com',
+            password='P@ssw0rd!2',
+            first_name='FirstAgain',
+            last_name='LastAgain',
+            dob='1999-08-19',
+            gender='male',
+            phone='3233213223',
+            address='456 Another St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        # verify duplicate email error
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Email already registered.', response.data)
+        
+    # simulate a database error to test if the registration endpoint handles database exceptions properly
+    def test_database_rollback_on_error(self):
+        new_user = {
+            'email': 'erroruser@example.com',
+            'password': 'P@ssw0rd1',
+            'first_name': 'Error',
+            'last_name': 'User',
+            'dob': '2000-01-01',
+            'gender': 'male',
+            'phone': '1234567890',
+            'address': '123 Error St',
+            'termsCheck': 'on'
+        }
+
+        with patch('app.get_db_connection', side_effect=sqlite3.DatabaseError('Simulated database error')):
+            response = self.app.post('/register', data=new_user, follow_redirects=True)
+            self.assertEqual(response.status_code, 500)
+            self.assertIn(b'Registration failed, please try again later.', response.data)
+
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE email = ?', ('erroruser@example.com',)).fetchone()
+        conn.close()
+
+        self.assertIsNone(user)
 
     # test for when a user enters an invalid email
     def test_invalid_email(self):
@@ -149,8 +239,8 @@ class TestRegistration(unittest.TestCase):
             phone='1234567890',
             address='123 Random St',
             termsCheck='on'
-        ), follow_redirects=True)
-        self.assertIn(b'Invalid date of birth. You must be atleast 18 years of age and enter in YYYY-MM-DD format.', response.data)
+            ), follow_redirects=True)
+        self.assertIn(b'Invalid date of birth. You must be at least 18 years of age and enter in YYYY-MM-DD format.', response.data)
 
     # test for when a user doesn't select a gender
     def test_invalid_gender(self):
@@ -196,6 +286,44 @@ class TestRegistration(unittest.TestCase):
             termsCheck='on'
         ), follow_redirects=True)
         self.assertIn(b'Invalid address. Please enter a valid address (at least 8 characters).', response.data)
+
+class CancelBookingTestCase(unittest.TestCase):
+
+    def setUp(self):
+        # Setup test client and enable testing mode
+        self.app = app.test_client()
+        self.conn = get_db_connection()
+        self.conn.execute('DELETE FROM bookings')  # Clear bookings table before each test
+        self.conn.execute('INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (1, 1, 1, "active")')
+        self.conn.commit()
+
+    def tearDown(self):
+        # Close connection and reset database after each test
+        self.conn.execute('DELETE FROM bookings')
+        self.conn.commit()
+        self.conn.close()
+
+    def test_cancel_booking_success(self):
+        # Test successful cancellation of an existing booking
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+        booking = self.conn.execute('SELECT status FROM bookings WHERE booking_id = 1').fetchone()
+        self.assertEqual(booking['status'], 'canceled')  # Verify the booking status is updated
+        self.assertIn(b'Booking canceled successfully!', response.data)  # Check for success message in redirected response
+       
+
+    def test_cancel_nonexistent_booking(self):
+        # Test trying to cancel a non-existent booking
+        response = self.app.post('/cancel_booking/9999', follow_redirects=True)
+        self.assertIn(b'Booking not found!', response.data)  # Check for "Booking not found" message
+
+    def test_cancel_booking_when_list_is_empty(self):
+        # Clear the bookings table directly
+        self.conn.execute('DELETE FROM bookings')
+        self.conn.commit()
+        
+        # Attempt to cancel a booking when no bookings are available
+        response = self.app.post('/cancel_booking/1', follow_redirects=True)
+        self.assertIn(b'Booking not found!', response.data)  # Check for message in empty state
 
 if __name__ == '__main__':
     unittest.main()
