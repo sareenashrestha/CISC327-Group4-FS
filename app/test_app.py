@@ -3,8 +3,52 @@ from app import app, get_db_connection, generate_password_hash
 import init_database
 
 
-BASE_URL = "http://localhost:5000"
+# BASE_URL = "http://localhost:5000"
 init_database.init_db()
+
+class TestIntegration(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
+
+        # Clear the database before each test
+        conn = get_db_connection()
+        conn.execute("DELETE FROM users")
+        conn.commit()
+    
+    def test_registration_and_login(self):
+        response = self.app.post('/register', data=dict(
+            email='validemail@example.com',
+            password='P@ssw0rd1',
+            first_name='First',
+            last_name='Last',
+            dob='2000-06-20',
+            gender='male',
+            phone='1234567890',
+            address='123 Random St',
+            termsCheck='on'
+        ), follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Email Address', response.data)
+
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM users WHERE email = ?", ('validemail@example.com',)).fetchone()
+            self.assertIsNotNone(user)
+
+
+        response = self.app.post('/login', data=dict(
+            username='validemail@example.com',
+            password='P@ssw0rd1'
+        ), follow_redirects=True)
+
+        with self.app.session_transaction() as session:
+            self.assertEqual(session.get('user_email'), 'validemail@example.com') 
+            self.assertEqual(session.get('logged_in'), True) 
+
+        # Checks for the right page is redirected to and the status code of the response
+        self.assertEqual(response.request.path, '/')  
+        self.assertEqual(response.status_code, 200)
 
 class TestLogin(unittest.TestCase):
     
@@ -28,6 +72,8 @@ class TestLogin(unittest.TestCase):
             conn.commit()
         except:
             pass
+        conn.close()
+
 
     # Test for the page loading properly
     def test_page_load(self):
@@ -37,14 +83,12 @@ class TestLogin(unittest.TestCase):
     # Testing for when a user successfully logs in, with their email and password in the dummy hashmap
     def test_successful_login(self):
         # Redirecting is false, as the check for the flash message should be done before the redirest
-        response = self.app.post('/login', data=dict(username='user1@gmail.com', password='Password1!'), follow_redirects=False)
-        self.assertEqual(response.status_code, 302) # 302 is the status code for redirect
+        response = self.app.post('/login', data=dict(username='user1@gmail.com', password='Password1!'), follow_redirects=True)
 
-        # This will grab the session data, which will include the flash message, then check if the right flash message is in the session data
         with self.app.session_transaction() as session:
-            flashed_messages = dict(session['_flashes'])
-            self.assertIn('Login successful!', flashed_messages.values())
-        response = self.app.get('/', follow_redirects=True) # Now can follow the redirext
+            self.assertEqual(session.get('user_email'), 'user1@gmail.com') 
+            self.assertEqual(session.get('logged_in'), True) 
+
 
         # Checks for the right page is redirected to and the status code of the response
         self.assertEqual(response.request.path, '/')  
