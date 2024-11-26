@@ -5,8 +5,10 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from init_database import init_db, get_db_connection
 
-app = Flask(__name__, static_folder='static')
-app.config['SECRET_KEY'] = "asdf"
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+
+init_db()
 
 init_db()
 
