@@ -38,21 +38,23 @@ class TestEndToEnd(unittest.TestCase):
             pass
         conn.close()
 
-
+        # Set up the webdriver for Selenium to display the webpage being tested
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
         self.driver.get("http://127.0.0.1:5000/login")
-        self.driver.implicitly_wait(5)
+        WebDriverWait(self.driver, 10).until(EC.title_is("Login Page"))
 
     def tearDown(self):
         self.driver.quit()
 
     def test_login(self):
+        # First check to make sure the right webpage is opened
         assert "Login Page" in self.driver.title
-        WebDriverWait(self.driver, 10).until(EC.title_is("Login Page"))
+
         input_email = self.driver.find_element(By.ID, "username")
         input_password = self.driver.find_element(By.ID, "password")
         submit_button = self.driver.find_element(By.ID, "submit")
 
+        # Checks to confirm that all the necessary elements are displayed
         assert input_email.is_displayed()
         assert input_password.is_displayed()
         assert submit_button.is_displayed()
@@ -63,6 +65,7 @@ class TestEndToEnd(unittest.TestCase):
 
         self.driver.implicitly_wait(5)
 
+        # Successful logins redirect back to the main page, so must check for that
         assert "QU Airlines" in self.driver.title
 
 
