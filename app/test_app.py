@@ -4,10 +4,57 @@ import init_database
 from unittest.mock import patch
 import sqlite3
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 # BASE_URL = "http://localhost:5000"
 init_database.init_db()
 
+class TestEndtoEnd(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
+
+        # clear the db before each test
+        conn = get_db_connection()
+        conn.execute("DELETE FROM users")
+        conn.commit()
+        conn.close()
+
+        # initialize Selenium WebDriver
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    def tearDown(self):
+        self.driver.quit()
+   
+    # test that a user can register successfully with valid input.
+    def test_successful_registration(self):
+        self.driver.get("http://127.0.0.1:5000/register")
+        WebDriverWait(self.driver, 10).until(EC.title_is("Register"))
+
+        # fill out the registration form with valid input
+        self.driver.find_element(By.NAME, "email").send_keys("testuser@example.com")
+        self.driver.find_element(By.NAME, "password").send_keys("P@ssw0rd1")
+        self.driver.find_element(By.NAME, "first_name").send_keys("First")
+        self.driver.find_element(By.NAME, "last_name").send_keys("Name")
+        self.driver.find_element(By.NAME, "dob").send_keys("2004-06-20")
+        self.driver.find_element(By.NAME, "gender").send_keys("female")
+        self.driver.find_element(By.NAME, "phone").send_keys("1234567890")
+        self.driver.find_element(By.NAME, "address").send_keys("123 Street St")
+        self.driver.find_element(By.ID, "termsCheck").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
+
+        # verify success message
+        success_message = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "alert-success"))
+        )
+        self.assertIn("Registration successful!", success_message.text)
+        
 class TestIntegration(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
@@ -395,9 +442,6 @@ class TestCancelBookingIntegration(unittest.TestCase):
         # Step 4: Confirm that the canceled booking is no longer listed
         self.assertNotIn(b'Toronto to Calgary', response.data)
 
-    
-
-        
 if __name__ == '__main__':
     unittest.main()
     
