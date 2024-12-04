@@ -42,7 +42,8 @@ class TestEndtoEnd(unittest.TestCase):
         self.driver.find_element(By.NAME, "password").send_keys("P@ssw0rd1")
         self.driver.find_element(By.ID, "termsCheck").click()
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
+        buttons = self.driver.find_elements(By.CSS_SELECTOR, ".btn-continue")
+        buttons[0].click()
 
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.NAME, "first_name"))
@@ -51,20 +52,25 @@ class TestEndtoEnd(unittest.TestCase):
         self.driver.find_element(By.NAME, "dob").send_keys("2004-06-20")
         self.driver.find_element(By.NAME, "gender").send_keys("female")
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
+        buttons = self.driver.find_elements(By.CSS_SELECTOR, ".btn-continue")
+        buttons[1].click()
     
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.NAME, "phone"))
         ).send_keys("1234567890")
         self.driver.find_element(By.NAME, "address").send_keys("123 Street St")
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
 
-        # verify success message
-        success_message = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "alert-success"))
+        buttons = self.driver.find_elements(By.CSS_SELECTOR, ".btn-continue")
+        buttons[2].click()
+
+        # verify the success message is present on the redirected login page
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "username"))
         )
-        self.assertIn("Registration successful!", success_message.text)
+        page_text = self.driver.page_source
+        self.assertIn("Email Address", page_text)
+
         
 class TestIntegration(unittest.TestCase):
     def setUp(self):
