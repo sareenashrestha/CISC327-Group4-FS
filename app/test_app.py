@@ -4,9 +4,80 @@ import init_database
 from unittest.mock import patch
 import sqlite3
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
-BASE_URL = "http://localhost:5000"
+#BASE_URL = "http://localhost:5000"
 init_database.init_db()
+
+class TestCancelBookingE2E(unittest.TestCase):
+    def setUp(self):
+        # Initialize the database
+        init_database.init_db()
+        conn = get_db_connection()
+        conn.execute("DELETE FROM bookings")
+        conn.execute("DELETE FROM flights")
+        conn.commit()
+        
+        # Insert dummy data for testing
+        conn.execute("INSERT INTO flights (flight_id, destination, departure, airline) VALUES (?, ?, ?, ?)",
+                     (1, 'Toronto to Calgary', '2024-12-01 10:00:00', 'Air Canada'))
+        conn.execute("INSERT INTO flights (flight_id, destination, departure, airline) VALUES (?, ?, ?, ?)",
+                     (2, 'Calgary to Toronto', '2024-12-06 03:00:00', 'WestJet'))
+        conn.execute("INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (?, ?, ?, ?)",
+                     (1, 1, 1, 'active'))
+        conn.execute("INSERT INTO bookings (booking_id, user_id, flight_id, status) VALUES (?, ?, ?, ?)",
+                     (2, 1, 2, 'active'))
+        conn.commit()
+        conn.close()
+
+        # Set up Selenium WebDriver
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        self.driver.get("http://127.0.0.1:5000/login")
+        WebDriverWait(self.driver, 10).until(EC.title_is("Login Page"))
+
+        # Log in as a test user
+        self.driver.find_element(By.ID, "username").send_keys("user1@gmail.com")
+        self.driver.find_element(By.ID, "password").send_keys("Password1!")
+        self.driver.find_element(By.ID, "submit").click()
+        WebDriverWait(self.driver, 10).until(EC.title_is("Booking Dashboard"))
+
+        def tearDown(self):
+            self.driver.quit()
+    
+        def test_cancel_booking_e2e(self):
+            # Navigate to the Cancel Booking page
+            self.driver.get("http://127.0.0.1:5000/cancelBooking")
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "bookingList")))
+
+            # Find and click the cancel button for the first booking
+            cancel_button = self.driver.find_element(By.CSS_SELECTOR, "button[data-booking-id='1']")
+            cancel_button.click()
+
+            # Confirm the cancellation (if there's a modal)
+            WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+            alert = self.driver.switch_to.alert
+            alert.accept()
+
+            # Verify the cancellation success message
+            success_message = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "alert-success"))
+            )
+            self.assertIn("Booking canceled successfully!", success_message.text)
+
+            # Verify the canceled booking is no longer listed
+            self.driver.get("http://127.0.0.1:5000/cancelBooking")
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "bookingList")))
+            booking_list = self.driver.find_element(By.ID, "bookingList").text
+            self.assertNotIn("Toronto to Calgary", booking_list)
+
+
+
 
 class TestLogin(unittest.TestCase):
     
@@ -386,9 +457,6 @@ class TestCancelBookingIntegration(unittest.TestCase):
 
         # Step 4: Confirm that the canceled booking is no longer listed
         self.assertNotIn(b'Toronto to Calgary', response.data)
-
-    
-
         
 if __name__ == '__main__':
     unittest.main()
