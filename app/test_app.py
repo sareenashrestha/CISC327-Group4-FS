@@ -6,31 +6,65 @@ import sqlite3
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 # BASE_URL = "http://localhost:5000"
 init_database.init_db()
 
-class TestEndtoEnd(unittest.TestCase):
+class TestEndToEnd(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
 
-        # clear the db before each test
         conn = get_db_connection()
         conn.execute("DELETE FROM users")
         conn.commit()
+
+        # Insert dummy data into the database
+        try:
+            passHash = generate_password_hash('Password1!')
+            conn.execute('''
+                INSERT INTO users (email, password, first_name, last_name, dob, gender, phone, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', ('user1@gmail.com', passHash, "First", "Last", "2000-06-20", "male", "1234567890", "123 Random St"))
+            conn.commit()
+        except:
+            pass
         conn.close()
 
-        # initialize Selenium WebDriver
+        # Set up the webdriver for Selenium to display the webpage being tested
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        self.driver.get("http://127.0.0.1:5000/login")
+        WebDriverWait(self.driver, 10).until(EC.title_is("Login Page"))
 
     def tearDown(self):
         self.driver.quit()
+
+    def test_login(self):
+        # First check to make sure the right webpage is opened
+        assert "Login Page" in self.driver.title
+
+        input_email = self.driver.find_element(By.ID, "username")
+        input_password = self.driver.find_element(By.ID, "password")
+        submit_button = self.driver.find_element(By.ID, "submit")
+
+        # Checks to confirm that all the necessary elements are displayed
+        assert input_email.is_displayed()
+        assert input_password.is_displayed()
+        assert submit_button.is_displayed()
+
+        input_email.send_keys("user1@gmail.com")
+        input_password.send_keys("Password1!")
+        input_password.send_keys(Keys.RETURN)
+
+        self.driver.implicitly_wait(5)
+
+        # Successful logins redirect back to the main page, so must check for that
+        assert "QU Airlines" in self.driver.title
    
     # test that a user can register successfully with valid input.
     def test_successful_registration(self):
