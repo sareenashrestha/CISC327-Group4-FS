@@ -40,13 +40,24 @@ class TestEndtoEnd(unittest.TestCase):
         # fill out the registration form with valid input
         self.driver.find_element(By.NAME, "email").send_keys("testuser@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("P@ssw0rd1")
-        self.driver.find_element(By.NAME, "first_name").send_keys("First")
+        self.driver.find_element(By.ID, "termsCheck").click()
+        
+        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
+
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "first_name"))
+        ).send_keys("First")
         self.driver.find_element(By.NAME, "last_name").send_keys("Name")
         self.driver.find_element(By.NAME, "dob").send_keys("2004-06-20")
         self.driver.find_element(By.NAME, "gender").send_keys("female")
-        self.driver.find_element(By.NAME, "phone").send_keys("1234567890")
+        
+        self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
+    
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "phone"))
+        ).send_keys("1234567890")
         self.driver.find_element(By.NAME, "address").send_keys("123 Street St")
-        self.driver.find_element(By.ID, "termsCheck").click()
+        
         self.driver.find_element(By.CSS_SELECTOR, ".btn-continue").click()
 
         # verify success message
