@@ -58,10 +58,10 @@
                     <h3>Departure</h3>
                     <p>Date: {{ booking['departure'].split(' ')[0] }}</p>
                     <p>Time: {{ booking['departure'].split(' ')[1] }}</p>
-                    <p>{{ booking['destination'] }}</p>
+                    <p id="place">{{ booking['destination'] }}</p>
                 </div>                
                 <form action="{{ url_for('cancel_booking', booking_id=booking['booking_id']) }}" method="POST" onsubmit="return confirmCancellation()">
-                    <button type="submit" class="cancel-button">Cancel Booking</button>
+                    <button type="submit" class="cancel-button" name="cancel">Cancel Booking</button>
                 </form>
             </div>
             <hr>

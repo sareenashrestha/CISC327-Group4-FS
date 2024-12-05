@@ -129,10 +129,10 @@ class TestEndToEnd(unittest.TestCase):
     def test_cancel_booking_e2e(self):
         # Navigate to the Cancel Booking page
         self.driver.get("http://127.0.0.1:5000/cancelBooking")
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "bookingList")))
+        WebDriverWait(self.driver, 10).until(EC.title_is("Cancel Booking"))
 
         # Find and click the cancel button for the first booking
-        cancel_button = self.driver.find_element(By.CSS_SELECTOR, "button[data-booking-id='1']")
+        cancel_button = self.driver.find_element(By.NAME, "cancel")
         cancel_button.click()
 
         # Confirm the cancellation (if there's a modal)
@@ -142,14 +142,14 @@ class TestEndToEnd(unittest.TestCase):
 
         # Verify the cancellation success message
         success_message = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "alert-success"))
+            EC.presence_of_element_located((By.CLASS_NAME, "flash-messages"))
         )
         self.assertIn("Booking canceled successfully!", success_message.text)
 
         # Verify the canceled booking is no longer listed
         self.driver.get("http://127.0.0.1:5000/cancelBooking")
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "bookingList")))
-        booking_list = self.driver.find_element(By.ID, "bookingList").text
+        WebDriverWait(self.driver, 10).until(EC.title_is("Cancel Booking"))
+        booking_list = self.driver.find_element(By.ID, "place").text
         self.assertNotIn("Toronto to Calgary", booking_list)
 
         
